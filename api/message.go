@@ -7,6 +7,7 @@ import (
 	"message-board/model"
 	"message-board/service"
 	"message-board/util"
+	"strconv"
 )
 
 func Send(c *gin.Context) {
@@ -49,5 +50,40 @@ func Check(c *gin.Context) { //查看关于用户的消息
 		util.RsepInternalErr(c)
 	}
 	c.JSON(200, u)
+	util.RespOK(c)
+}
+
+func LookAllMessage(c *gin.Context) { //查看所有信息。不检查登录状态，游客状态也能够访问。
+	message, err := service.LookAllMessage()
+	if err != nil {
+		util.RsepInternalErr(c)
+		return
+	}
+	c.JSON(200, message)
+	util.RespOK(c)
+}
+
+func DeleteMessage(c *gin.Context) {
+	cookie, err := c.Cookie("LoginState")
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("search user error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
+	id := c.PostForm("id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		util.NormErr(c, 20021, "非法输入")
+	}
+	err = service.DeleteMessage(cookie, ID)
+	if err != nil {
+		if err.Error() == "无操作权限" {
+			util.NormErr(c, 20022, "没有删除此信息的权限"+cookie)
+			return
+		}
+		log.Printf("search user error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
 	util.RespOK(c)
 }

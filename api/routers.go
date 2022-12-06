@@ -15,6 +15,8 @@ func InitRouter() {
 	{
 		mesg.POST("/send", Send)
 		mesg.GET("/check", Check)
+		mesg.GET("/look", LookAllMessage)
+		mesg.GET("/delete", DeleteMessage)
 	}
 	r.Run()
 }
