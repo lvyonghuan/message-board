@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"errors"
+	"fmt"
 	"message-board/model"
 )
 
@@ -40,5 +42,9 @@ func SearchUsernameByCookie(cookie string) (username string, err error) {
 		return
 	}
 	err = row.Scan(&u.UserName, &u.Password, &u.SecrecyQuestion, &u.Secrecy, &u.Administrator, &u.Cookie)
+	fmt.Println(u.UserName)
+	if u.UserName == "" {
+		return "", errors.New("用户未登录或登陆状态失效")
+	}
 	return u.UserName, err
 }

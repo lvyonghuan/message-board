@@ -18,7 +18,11 @@ func Send(c *gin.Context) {
 		return
 	}
 	Username, err := service.SearchUsernameByCookie(cookie)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
+		if err.Error() == "用户未登录或登陆状态失效" {
+			util.NormErr(c, 20013, "用户未登录或登陆状态失效")
+			return
+		}
 		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
@@ -53,6 +57,10 @@ func Check(c *gin.Context) { //查看关于用户的消息
 	}
 	username, err := service.SearchUsernameByCookie(cookie)
 	if err != nil && err != sql.ErrNoRows {
+		if err.Error() == "用户未登录或登陆状态失效" {
+			util.NormErr(c, 20013, "用户未登录或登陆状态失效")
+			return
+		}
 		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
@@ -84,6 +92,10 @@ func DeleteMessage(c *gin.Context) {
 	}
 	username, err := service.SearchUsernameByCookie(cookie)
 	if err != nil && err != sql.ErrNoRows {
+		if err.Error() == "用户未登录或登陆状态失效" {
+			util.NormErr(c, 20013, "用户未登录或登陆状态失效")
+			return
+		}
 		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
