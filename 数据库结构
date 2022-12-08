@@ -1,20 +1,22 @@
 数据库名称：user
 
-名称：user
+表名称：user
 
 (
     username varchar(20) not null,
-    password varchar(20) not null,
+    password varchar(256) not null,    存储一串哈希值
     question varchar(20) null,    密保问题
-    secrecy  varchar(20) null     密保
+    secrecy  varchar(20) null,     密保
+    administrator tinyint(1) null,   当此值为1的时候表示是管理员，0则不是。管理员权限应当在后台赋予。
+    cookie   varchar(128) null     储存登录状态，一串UUID格式的数字。与用户本地储存的cookie中的数值进行比对检查登录状态。在用户登陆60分钟后被timer删掉（用户本地cookie也保存60分钟）。
 );
 
-名称：message
+表名称：message
 
 (
     username  varchar(20) null,      信息的发送对象（或者说，@功能）
     message   varchar(20) null,      信息内容
     sendbywho varchar(20) null,      发送人
-    id        bigint auto_increment  id大概可以理解为几楼吧，等会做
+    id        bigint auto_increment  id大概可以理解为几楼吧
         primary key
 );

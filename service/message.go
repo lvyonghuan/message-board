@@ -24,3 +24,8 @@ func DeleteMessage(username string, id int) (err error) {
 	err = dao.DeleteMessage(username, id)
 	return
 }
+
+func SearchUsernameByCookie(cookie string) (username string, err error) {
+	username, err = dao.SearchUsernameByCookie(cookie)
+	return username, err
+}

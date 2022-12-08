@@ -13,7 +13,13 @@ import (
 func Send(c *gin.Context) {
 	cookie, err := c.Cookie("LoginState")
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
+	Username, err := service.SearchUsernameByCookie(cookie)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
@@ -21,17 +27,17 @@ func Send(c *gin.Context) {
 	username := c.PostForm("username")              //这个username是指给谁发送信息
 	_, err = service.SearchUserByUserName(username) //查找发送对象是否存在于数据库中
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
 	err = service.SendMessage(model.Message{ //发送消息
-		Sendbywho: cookie,
+		Sendbywho: Username,
 		Message:   message,
 		Username:  username,
 	})
 	if err != nil {
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
@@ -41,11 +47,17 @@ func Send(c *gin.Context) {
 func Check(c *gin.Context) { //查看关于用户的消息
 	cookie, err := c.Cookie("LoginState")
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
-	u, err := service.CheckMessage(cookie)
+	username, err := service.SearchUsernameByCookie(cookie)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("search message error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
+	u, err := service.CheckMessage(username)
 	if err != nil {
 		util.RsepInternalErr(c)
 	}
@@ -66,7 +78,13 @@ func LookAllMessage(c *gin.Context) { //查看所有信息。不检查登录状�
 func DeleteMessage(c *gin.Context) {
 	cookie, err := c.Cookie("LoginState")
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
+	username, err := service.SearchUsernameByCookie(cookie)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
@@ -75,13 +93,13 @@ func DeleteMessage(c *gin.Context) {
 	if err != nil {
 		util.NormErr(c, 20021, "非法输入")
 	}
-	err = service.DeleteMessage(cookie, ID)
+	err = service.DeleteMessage(username, ID)
 	if err != nil {
 		if err.Error() == "无操作权限" {
 			util.NormErr(c, 20022, "没有删除此信息的权限"+cookie)
 			return
 		}
-		log.Printf("search user error:%v", err)
+		log.Printf("search message error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}

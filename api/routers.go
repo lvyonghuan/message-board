@@ -11,12 +11,12 @@ func InitRouter() {
 		use.POST("/login", Login)       //登录
 		use.PUT("/change", Password)    //修改密码
 	}
-	mesg := r.Group("/message")
+	message := r.Group("/message")
 	{
-		mesg.POST("/send", Send)
-		mesg.GET("/check", Check)
-		mesg.GET("/look", LookAllMessage)
-		mesg.GET("/delete", DeleteMessage)
+		message.POST("/send", Send)//发送消息
+		message.GET("/check", Check)//查看提到登陆者的消息
+		message.GET("/look", LookAllMessage)//查看所有消息
+		message.GET("/delete", DeleteMessage)//删除消息
 	}
 	r.Run()
 }

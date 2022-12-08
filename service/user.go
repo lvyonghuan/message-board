@@ -20,3 +20,8 @@ func ChangePassword(name string, NewPassword string) (err error) { //修改密�
 	err = dao.ChangePassword(name, NewPassword)
 	return err
 }
+
+func InsertCookieToken(username string, token string) (err error) {
+	err = dao.InsertCookieToken(username, token)
+	return
+}

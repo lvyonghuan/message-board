@@ -4,9 +4,12 @@ package api
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"log"
+	"message-board/function"
 	"message-board/model"
 	"message-board/service"
+	"message-board/timer"
 	"message-board/util"
 )
 
@@ -29,13 +32,19 @@ func Register(c *gin.Context) {
 		util.NormErr(c, 300, "用户名已注册")
 		return
 	}
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(Password), bcrypt.DefaultCost) //密码哈希化，加密
+	if err != nil {
+		panic(err)
+	}
 	err = service.CreateUser(model.User{ //创建用户信息
 		UserName:        Username,
-		Password:        Password,
+		Password:        string(hashPassword),
 		SecrecyQuestion: SecrecyQuestion,
 		Secrecy:         Secrecy,
+		Administrator:   0,
 	})
 	if err != nil {
+		log.Printf("search user error:%v", err)
 		util.RsepInternalErr(c)
 		return
 	}
@@ -55,11 +64,23 @@ func Login(c *gin.Context) {
 		util.NormErr(c, 300, "用户未注册或用户名输入错误")
 		return
 	}
-	if u.Password != Password {
+	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(Password)); err != nil { //将哈希化的密码与用户输入密码进行检验
 		util.NormErr(c, 20001, "密码错误")
 		return
 	}
-	c.SetCookie("LoginState", u.UserName, 3600, "/", "localhost", false, true) //保存登陆状态
+	token, err := function.GenerateToken()
+	if err != nil {
+		log.Printf("search user error:%v", err)
+		return
+	}
+	err = service.InsertCookieToken(Username, token)
+	if err != nil {
+		log.Printf("search user error:%v", err)
+		util.RsepInternalErr(c)
+		return
+	}
+	go timer.DeleteCookieTimer(Username)
+	c.SetCookie("LoginState", token, 3600, "/", "localhost", false, true) //保存登陆状态
 	util.RespOK(c)
 }
 
@@ -90,7 +111,11 @@ func Password(c *gin.Context) {
 		util.RespParamErr(c)
 		return
 	}
-	err = service.ChangePassword(Username, NewPassword) //修改密码
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(NewPassword), bcrypt.DefaultCost) //密码哈希化，加密
+	if err != nil {
+		panic(err)
+	}
+	err = service.ChangePassword(Username, string(hashPassword)) //修改密码
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("search user error:%v", err)
 		util.RsepInternalErr(c)
